@@ -16,6 +16,71 @@
 1）由于ScriptEngine是一种需要池化的资源（每次临时new性能较低所以池化了），在并发环境下使用时可能会有上下文污染的问题，所以需要使用时最好通过`ConditionJudgeService.doWithScriptEngine`进行调用，该方法会自动管理上下文，保证并发调用上下文的正确性；    
 2）`条件`除了用JavaScript实现，其实也可以用Java代码实现，详见`Cond_DateLimit`条件脚本。    
 
-另外测试用例`ConditionJudgeServiceTest`包含了所有使用姿势，请移步测试用例查看。
+测试用例`ConditionJudgeServiceTest`包含了所有使用姿势，请移步测试用例查看。
+以下为测试用例用的示例demo节选：
+
+```
+# 简单的单一条件判断
+Map<String, Object> ctxData = new HashMap<>();
+ctxData.put(ConditionJudgeService.ContextDataKey.platform, 1);
+
+conditionJudgeService.doWithScriptEngine(ctxData, (scriptEngine -> {
+    boolean result = conditionJudgeService.judgeCondition("platformInclude", "1,6", scriptEngine);
+    Assert.assertTrue(result);
+}));
+```
+
+```
+# 复合条件判断
+// 准备用户数据
+UserInfoBO userInfo = new UserInfoBO();
+userInfo.setUserId(1024L);
+// 准备脚本执行上下文
+Map<String, Object> ctxData = new HashMap<>();
+ctxData.put(ConditionJudgeService.ContextDataKey.platform, 1);
+ctxData.put(ConditionJudgeService.ContextDataKey.userInfo, userInfo);
+ctxData.put(ConditionJudgeService.ContextDataKey.version, "2.2.9");
+// 在一个上下文中连续执行各种条件
+conditionJudgeService.doWithScriptEngine(ctxData, (scriptEngine -> {
+    String mergeCondition = "platformInclude: 1 && isLogin && versionGE: 2.2.8";
+    boolean result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
+    Assert.assertTrue(result);
+
+    mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.2.8";
+    result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
+    Assert.assertTrue(result);
+
+    mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.3.0";
+    result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
+    Assert.assertFalse(result);
+}));
+```
+
+顺便附上我们公司App的功能入口的配置化demo(已脱敏)
+```
+[
+  {
+    "title": "协议规则",
+    "code": "agreementRules",
+    "condition": "isLogin && isFromApp", // 入口是否要透出
+    "conditionUrl": [
+      // 入口要透出的URL由condition决定
+      {"condition": "isFromH5", "url":"https://{H5Host}/user-admin/pages/doc/index.html"},
+      {"condition": "isFromWxXcx", "url": "https://{H5Host}/user-admin/pages/xcxdoc.html"}
+    ]
+  },
+
+  {
+    "title": "邀请码填写",
+    "code": "invitationCode",
+    "condition": "isLogin || isFromH5",
+    "conditionUrl": [
+      {"condition": "userLevelInclude: B,C,D && isParentOfficial", "url": "https://{H5Host}/xxlogin/relationshipBinding"},
+      {"condition": "userLevelInclude: A && !isParentOfficial", "url": "https://{H5Host}/xxlogin/relationship?recommendId={recommendId}"}
+    ]
+  }
+]
+```
+
 
 本项目代码已经经过了线上验证，但没有继续深入的压测数据，需要的话可以自己写测试用例跑一下。

@@ -130,17 +130,13 @@ public class ConditionJudgeServiceTest {
             String mergeCondition = "platformInclude: 1 && isLogin && versionGE: 2.2.8";
             boolean result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
             Assert.assertTrue(result);
-        }));
 
-        conditionJudgeService.doWithScriptEngine(ctxData, (scriptEngine -> {
-            String mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.2.8";
-            boolean result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
+            mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.2.8";
+            result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
             Assert.assertTrue(result);
-        }));
 
-        conditionJudgeService.doWithScriptEngine(ctxData, (scriptEngine -> {
-            String mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.3.0";
-            boolean result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
+            mergeCondition = "platformInclude: 2 || !isLogin || versionGE: 2.3.0";
+            result = conditionJudgeService.judgeMergedCondition(mergeCondition, scriptEngine);
             Assert.assertFalse(result);
         }));
     }
