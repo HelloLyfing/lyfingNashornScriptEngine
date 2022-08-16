@@ -167,7 +167,7 @@ public class ConditionScriptService {
             log.info("loadScripts in local failed");
         }
 
-        // 从DB或Xconf加载
+        // 从DB、配置中心、Redis中加载
 
         return nameList;
     }
