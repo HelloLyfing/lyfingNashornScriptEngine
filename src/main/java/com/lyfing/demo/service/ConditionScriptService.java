@@ -133,7 +133,7 @@ public class ConditionScriptService {
     }
 
     /**
-     * db, xconf 随便存哪里
+     * db, 配置中心，redis 随便存哪里
      */
     private String loadJsCodeByName(String name) {
         // 先从本地加载
@@ -148,7 +148,7 @@ public class ConditionScriptService {
             log.info("loadScript in local failed, {}", localPath, th);
         }
 
-        // 从DB或Xconf加载
+        // 从DB、配置中心、Redis中加载
 
         return null;
     }
