@@ -1,7 +1,8 @@
 package com.lyfing.demo.service;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.lyfing.demo.container.BeanContainerAdapter;
+import com.lyfing.demo.util.Constants;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -9,16 +10,18 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.script.*;
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * script engine service
  */
 public class ScriptEngineService {
+
+    @Resource
+    private BeanContainerAdapter beanContainerAdapter;
 
     private GenericObjectPool<ScriptEngine> scriptEnginePool = null;
 
@@ -76,25 +79,8 @@ public class ScriptEngineService {
 
     @PostConstruct
     public void init() {
-        /**
-         * 此处配置业务方可以定制化改造
-         */
-        GenericObjectPoolConfig<ScriptEngine> poolConfig = new GenericObjectPoolConfig<>();
-
-        // 最大空闲数
-        poolConfig.setMaxIdle(100);
-        // 最小空闲数, 池中只有一个空闲对象的时候，池会在创建一个对象，并借出一个对象，从而保证池中最小空闲数为1
-        poolConfig.setMinIdle(50);
-        // 最大池对象总数
-        poolConfig.setMaxTotal(200);
-        // 在获取对象的时候检查有效性, 默认false
-        poolConfig.setTestOnBorrow(false);
-        // 在归还对象的时候检查有效性, 默认false
-        poolConfig.setTestOnReturn(false);
-        // 在空闲时检查有效性, 默认false
-        poolConfig.setTestWhileIdle(false);
-        // 借出对象时最大等待时间
-        poolConfig.setMaxWait(Duration.ofMillis(2000));
+        GenericObjectPoolConfig<ScriptEngine> poolConfig = beanContainerAdapter.getBean(
+                Constants.SCRIPT_ENGINE_POOL_CONFIG, GenericObjectPoolConfig.class);
 
         scriptEnginePool = new GenericObjectPool<>(new InnerPoolableObjectFactory(), poolConfig);
     }

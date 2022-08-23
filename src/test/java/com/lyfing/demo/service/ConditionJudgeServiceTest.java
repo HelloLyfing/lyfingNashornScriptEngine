@@ -1,13 +1,13 @@
 package com.lyfing.demo.service;
 
 import com.lyfing.demo.bo.UserInfoBO;
+import com.lyfing.demo.container.DefaultBeanContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.util.ReflectionUtils;
 
-import javax.script.ScriptEngine;
 import java.util.*;
 
 /**
@@ -236,6 +236,14 @@ public class ConditionJudgeServiceTest {
         }
 
         ScriptEngineService scriptEngineService = new ScriptEngineService();
+        // 依赖注入
+        ReflectionUtils.doWithFields(scriptEngineService.getClass(), (field) -> {
+            if (Objects.equals("beanContainerAdapter", field.getName())) {
+                field.setAccessible(true);
+                field.set(scriptEngineService, new DefaultBeanContainer());
+            }
+        });
+        // 初始化
         try {
             scriptEngineService.init();
         } catch (Throwable t) {
